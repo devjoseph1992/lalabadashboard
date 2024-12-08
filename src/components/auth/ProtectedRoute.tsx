@@ -1,33 +1,31 @@
-import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { getAuth } from "firebase/auth";
-import { fetchUserRole } from "../../firebase/authHelpers"; // Adjust the path if necessary
+// src/components/auth/ProtectedRoute.tsx
 
-const auth = getAuth();
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { UserRole } from "@/types/UserRole";
 
 interface ProtectedRouteProps {
-  role: string; // Required role for the route
-  children: React.ReactNode; // Content to render if access is allowed
+  children: JSX.Element;
+  roles: UserRole[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ role, children }) => {
-  const [user, loading] = useAuthState(auth); // Removed unused error
-  const [userRole, setUserRole] = useState<string | null>(null);
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, roles }) => {
+  const { user, userRole, roleLoading } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      fetchUserRole(user.uid)
-        .then((role) => setUserRole(role))
-        .catch((err) => console.error("Error fetching user role:", err));
-    }
-  }, [user]);
+  if (roleLoading) {
+    return <div>Loading...</div>;
+  }
 
-  if (loading) return <div>Loading...</div>;
-  if (!user) return <Navigate to="/" replace />;
-  if (userRole && userRole !== role)
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (!roles.includes(userRole as UserRole)) {
     return <Navigate to="/error/unauthorized" replace />;
-  return <>{children}</>;
+  }
+
+  return children;
 };
 
 export default ProtectedRoute;

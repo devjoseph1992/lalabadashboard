@@ -1,11 +1,7 @@
 import React, { useState, FormEvent } from "react";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import app from "../../firebase/firebaseConfig";
-
-const auth = getAuth(app);
-const db = getFirestore(app);
+import { auth } from "@/firebase/firebaseConfig"; // Your Firebase auth configuration
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -14,12 +10,28 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
+  // Utility function for handling Firebase errors
+  const handleFirebaseError = (err: any): string => {
+    switch (err.code) {
+      case "auth/user-not-found":
+        return "User not found. Please check your email.";
+      case "auth/wrong-password":
+        return "Incorrect password.";
+      case "auth/network-request-failed":
+        return "Network error. Please check your connection.";
+      default:
+        console.error("Unexpected error:", err);
+        return "An unexpected error occurred.";
+    }
+  };
+
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
+      // Authenticate user
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
@@ -27,21 +39,25 @@ const LoginPage: React.FC = () => {
       );
       const user = userCredential.user;
 
-      // Fetch role from Firestore
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (userDoc.exists()) {
-        const { role } = userDoc.data() as { role: string };
-        if (role === "admin") {
-          navigate("/admin"); // Redirect to admin dashboard
-        } else {
-          setError("Unauthorized role.");
-        }
+      // Fetch and store ID token
+      const idToken = await user.getIdToken(true); // Force token refresh
+      localStorage.setItem("idToken", idToken);
+
+      console.log("ID Token stored:", idToken); // Debugging log
+
+      // Get custom claims
+      const idTokenResult = await user.getIdTokenResult();
+      console.log("Custom claims:", idTokenResult.claims); // Debugging log
+
+      // Navigate based on role
+      if (idTokenResult.claims.role === "admin") {
+        navigate("/admin");
       } else {
-        setError("User data not found.");
+        setError("Unauthorized role. You don't have admin access.");
       }
     } catch (err: any) {
       console.error("Login error:", err);
-      setError(err.message);
+      setError(handleFirebaseError(err));
     } finally {
       setLoading(false);
     }
@@ -56,26 +72,33 @@ const LoginPage: React.FC = () => {
         <form onSubmit={handleLogin} className="space-y-4">
           <input
             type="email"
+            name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
             placeholder="Email"
+            required
             className="w-full px-3 py-2 border rounded-md"
+            disabled={loading}
           />
           <input
             type="password"
+            name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
             placeholder="Password"
+            required
             className="w-full px-3 py-2 border rounded-md"
+            disabled={loading}
           />
           {error && <p className="text-red-500">{error}</p>}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+            className={`w-full py-2 rounded-md text-white ${
+              loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+            }`}
+            disabled={loading}
           >
-            {loading ? "Loading..." : "Login"}
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
       </div>

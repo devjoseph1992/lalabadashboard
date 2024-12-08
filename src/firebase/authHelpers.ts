@@ -1,16 +1,21 @@
-import { getAuth, signOut } from "firebase/auth";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
-import app from "./firebaseConfig";
+// src/firebase/authHelpers.ts
 
-const auth = getAuth(app);
-const db = getFirestore(app);
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig"; // Ensure db is exported from config.ts
+import { UserRole } from "@/types/UserRole"; // Import UserRole type
 
-export const fetchUserRole = async (uid: string): Promise<string> => {
-  const docRef = doc(db, "users", uid);
-  const docSnap = await getDoc(docRef);
-  return docSnap.exists() ? (docSnap.data().role as string) : "employee";
-};
+export const fetchUserRole = async (uid: string): Promise<UserRole> => {
+  const userDocRef = doc(db, "users", uid);
+  const userDoc = await getDoc(userDocRef);
 
-export const logout = async (): Promise<void> => {
-  await signOut(auth);
+  if (userDoc.exists()) {
+    const data = userDoc.data();
+    if (data.role && (data.role === "admin" || data.role === "employee")) {
+      return data.role as UserRole;
+    } else {
+      throw new Error("Role not defined or invalid for user");
+    }
+  } else {
+    throw new Error("User does not exist");
+  }
 };

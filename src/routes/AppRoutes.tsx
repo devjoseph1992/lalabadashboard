@@ -1,41 +1,34 @@
+// src/routes/AppRoutes.tsx
+
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import LoginPage from "../pages/auth/LoginPage";
-import AdminDashboard from "../pages/admin/Admindashboard";
-import EmployeeDashboard from "../pages/employee/EmployeeDashboard";
-import ProtectedRoute from "../components/auth/ProtectedRoute";
+import AdminLayout from "@/components/layout/AdminLayout";
+import AdminDashboard from "@/pages/admin/Admindashboard";
+import AddEmployeePage from "@/pages/admin/AddEmployeePage";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import LoginPage from "@/pages/auth/LoginPage";
+import UnauthorizedPage from "@/pages/error/UnauthorizedPage";
+import { UserRole } from "@/types/UserRole";
 
 const AppRoutes: React.FC = () => {
+  const adminRoles: UserRole[] = [UserRole.Admin];
+
   return (
     <Routes>
-      {/* Public Route */}
       <Route path="/" element={<LoginPage />} />
-
-      {/* Admin Route */}
       <Route
         path="/admin"
         element={
-          <ProtectedRoute role="admin">
-            <AdminDashboard />
+          <ProtectedRoute roles={adminRoles}>
+            <AdminLayout />
           </ProtectedRoute>
         }
-      />
-
-      {/* Employee Route */}
-      <Route
-        path="/employee"
-        element={
-          <ProtectedRoute role="employee">
-            <EmployeeDashboard />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Unauthorized Route */}
-      <Route
-        path="/error/unauthorized"
-        element={<div>Unauthorized Access</div>}
-      />
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="addemployee" element={<AddEmployeePage />} />
+      </Route>
+      <Route path="/error/unauthorized" element={<UnauthorizedPage />} />
+      <Route path="*" element={<div>404 Not Found</div>} />
     </Routes>
   );
 };
