@@ -1,19 +1,16 @@
-// src/pages/admin/AddEmployeePage.tsx
-
 import React, { useState, FormEvent } from "react";
-import { addEmployee } from "@/api/apiService"; // Adjust path as needed
+import { addShopOwner } from "@/api/apiService"; // Adjust the path to your API service
 
-const AddEmployeePage: React.FC = () => {
+const AddShopOwnerPage: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     firstName: "",
     lastName: "",
-    address: "",
     phoneNumber: "",
-    sssNumber: "",
+    address: "",
     tinNumber: "",
-    philhealthNumber: "",
+    dtiSec: "",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -27,13 +24,10 @@ const AddEmployeePage: React.FC = () => {
     if (!formData.password) newErrors.password = "Password is required.";
     if (!formData.firstName) newErrors.firstName = "First name is required.";
     if (!formData.lastName) newErrors.lastName = "Last name is required.";
-    if (!formData.address) newErrors.address = "Address is required.";
     if (!/^\d{10,11}$/.test(formData.phoneNumber))
       newErrors.phoneNumber = "Phone number must be 10-11 digits.";
-    if (!formData.sssNumber) newErrors.sssNumber = "SSS number is required.";
     if (!formData.tinNumber) newErrors.tinNumber = "TIN number is required.";
-    if (!formData.philhealthNumber)
-      newErrors.philhealthNumber = "PhilHealth number is required.";
+    if (!formData.dtiSec) newErrors.dtiSec = "DTI/SEC is required.";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -49,21 +43,20 @@ const AddEmployeePage: React.FC = () => {
     setLoading(true);
 
     try {
-      await addEmployee(formData);
+      await addShopOwner(formData);
       setSuccess(true);
       setFormData({
         email: "",
         password: "",
         firstName: "",
         lastName: "",
-        address: "",
         phoneNumber: "",
-        sssNumber: "",
+        address: "",
         tinNumber: "",
-        philhealthNumber: "",
+        dtiSec: "",
       });
     } catch (error: any) {
-      console.error("Error adding employee:", error.response?.data || error);
+      console.error("Error adding shop owner:", error.response?.data || error);
       setErrors({
         general: error.response?.data?.message || "An error occurred.",
       });
@@ -72,17 +65,19 @@ const AddEmployeePage: React.FC = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
     <div className="p-6 bg-white shadow-md rounded-lg max-w-md mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Add Employee</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Add Shop Owner</h2>
       {errors.general && <p className="text-red-500 mb-4">{errors.general}</p>}
       {success && (
-        <p className="text-green-500 mb-4">Employee added successfully!</p>
+        <p className="text-green-500 mb-4">Shop owner added successfully!</p>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
@@ -127,16 +122,6 @@ const AddEmployeePage: React.FC = () => {
 
         <input
           type="text"
-          name="address"
-          value={formData.address}
-          onChange={handleChange}
-          placeholder="Address"
-          className="w-full px-3 py-2 border rounded-md"
-        />
-        {errors.address && <p className="text-red-500">{errors.address}</p>}
-
-        <input
-          type="text"
           name="phoneNumber"
           value={formData.phoneNumber}
           onChange={handleChange}
@@ -149,13 +134,12 @@ const AddEmployeePage: React.FC = () => {
 
         <input
           type="text"
-          name="sssNumber"
-          value={formData.sssNumber}
+          name="address"
+          value={formData.address}
           onChange={handleChange}
-          placeholder="SSS Number"
+          placeholder="Address"
           className="w-full px-3 py-2 border rounded-md"
         />
-        {errors.sssNumber && <p className="text-red-500">{errors.sssNumber}</p>}
 
         <input
           type="text"
@@ -169,15 +153,13 @@ const AddEmployeePage: React.FC = () => {
 
         <input
           type="text"
-          name="philhealthNumber"
-          value={formData.philhealthNumber}
+          name="dtiSec"
+          value={formData.dtiSec}
           onChange={handleChange}
-          placeholder="PhilHealth Number"
+          placeholder="DTI/SEC"
           className="w-full px-3 py-2 border rounded-md"
         />
-        {errors.philhealthNumber && (
-          <p className="text-red-500">{errors.philhealthNumber}</p>
-        )}
+        {errors.dtiSec && <p className="text-red-500">{errors.dtiSec}</p>}
 
         <button
           type="submit"
@@ -186,11 +168,11 @@ const AddEmployeePage: React.FC = () => {
           }`}
           disabled={loading}
         >
-          {loading ? "Adding Employee..." : "Add Employee"}
+          {loading ? "Adding Shop Owner..." : "Add Shop Owner"}
         </button>
       </form>
     </div>
   );
 };
 
-export default AddEmployeePage;
+export default AddShopOwnerPage;
