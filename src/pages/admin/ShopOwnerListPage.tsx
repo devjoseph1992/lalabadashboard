@@ -1,9 +1,16 @@
+// src/pages/admin/ShopOwnerListPage.tsx
+
 import React, { useEffect, useState } from "react";
 import {
   getShopOwners,
   updateShopOwner,
   deleteShopOwner,
 } from "@/api/apiService";
+import { useAuth } from "@/contexts/AuthContext"; // Import the useAuth hook
+
+// Assuming you have UserRole defined as follows:
+// src/types/UserRole.ts
+// export type UserRole = 'admin' | 'employee';
 
 interface ShopOwner {
   id: string;
@@ -26,6 +33,8 @@ const ShopOwnerListPage: React.FC = () => {
   const [formData, setFormData] = useState<ShopOwner | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
+
+  const { userRole, roleLoading } = useAuth(); // Access userRole and roleLoading from context
 
   const fetchShopOwners = async (page: number = 1, limit: number = 5) => {
     setLoading(true);
@@ -88,6 +97,11 @@ const ShopOwnerListPage: React.FC = () => {
     }
   };
 
+  // Handle role loading state
+  if (roleLoading) {
+    return <p>Loading user information...</p>;
+  }
+
   return (
     <div className="p-6 bg-white shadow-md rounded-lg">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Shop Owner List</h2>
@@ -106,7 +120,12 @@ const ShopOwnerListPage: React.FC = () => {
                   <th className="border border-gray-300 px-4 py-2">Phone</th>
                   <th className="border border-gray-300 px-4 py-2">TIN</th>
                   <th className="border border-gray-300 px-4 py-2">DTI/SEC</th>
-                  <th className="border border-gray-300 px-4 py-2">Actions</th>
+                  {/* Conditionally render the Actions column header */}
+                  {userRole !== "employee" && (
+                    <th className="border border-gray-300 px-4 py-2">
+                      Actions
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -127,20 +146,23 @@ const ShopOwnerListPage: React.FC = () => {
                     <td className="border border-gray-300 px-4 py-2">
                       {owner.dtiSec}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      <button
-                        className="mr-2 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
-                        onClick={() => handleEdit(owner)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="bg-red-600 text-white px-4 py-1 rounded hover:bg-red-700"
-                        onClick={() => handleDelete(owner.id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
+                    {/* Conditionally render the Actions buttons */}
+                    {userRole !== "employee" && (
+                      <td className="border border-gray-300 px-4 py-2">
+                        <button
+                          className="mr-2 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+                          onClick={() => handleEdit(owner)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="bg-red-600 text-white px-4 py-1 rounded hover:bg-red-700"
+                          onClick={() => handleDelete(owner.id)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -153,7 +175,7 @@ const ShopOwnerListPage: React.FC = () => {
               onClick={() => handlePageChange(1)}
               className={`px-3 py-1 mx-1 rounded ${
                 currentPage === 1
-                  ? "bg-gray-400"
+                  ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gray-300 hover:bg-gray-400"
               }`}
               disabled={currentPage === 1}
@@ -164,7 +186,7 @@ const ShopOwnerListPage: React.FC = () => {
               onClick={() => handlePageChange(currentPage - 1)}
               className={`px-3 py-1 mx-1 rounded ${
                 currentPage === 1
-                  ? "bg-gray-400"
+                  ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gray-300 hover:bg-gray-400"
               }`}
               disabled={currentPage === 1}
@@ -188,7 +210,7 @@ const ShopOwnerListPage: React.FC = () => {
               onClick={() => handlePageChange(currentPage + 1)}
               className={`px-3 py-1 mx-1 rounded ${
                 currentPage === totalPages
-                  ? "bg-gray-400"
+                  ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gray-300 hover:bg-gray-400"
               }`}
               disabled={currentPage === totalPages}
@@ -199,7 +221,7 @@ const ShopOwnerListPage: React.FC = () => {
               onClick={() => handlePageChange(totalPages)}
               className={`px-3 py-1 mx-1 rounded ${
                 currentPage === totalPages
-                  ? "bg-gray-400"
+                  ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gray-300 hover:bg-gray-400"
               }`}
               disabled={currentPage === totalPages}
@@ -222,7 +244,10 @@ const ShopOwnerListPage: React.FC = () => {
               name="firstName"
               value={formData?.firstName || ""}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev!, firstName: e.target.value }))
+                setFormData((prev) => ({
+                  ...prev!,
+                  firstName: e.target.value,
+                }))
               }
               placeholder="First Name"
               className="w-full px-3 py-2 border rounded-md"
@@ -232,7 +257,10 @@ const ShopOwnerListPage: React.FC = () => {
               name="lastName"
               value={formData?.lastName || ""}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev!, lastName: e.target.value }))
+                setFormData((prev) => ({
+                  ...prev!,
+                  lastName: e.target.value,
+                }))
               }
               placeholder="Last Name"
               className="w-full px-3 py-2 border rounded-md"
@@ -242,7 +270,10 @@ const ShopOwnerListPage: React.FC = () => {
               name="email"
               value={formData?.email || ""}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev!, email: e.target.value }))
+                setFormData((prev) => ({
+                  ...prev!,
+                  email: e.target.value,
+                }))
               }
               placeholder="Email"
               className="w-full px-3 py-2 border rounded-md"
@@ -265,7 +296,10 @@ const ShopOwnerListPage: React.FC = () => {
               name="tinNumber"
               value={formData?.tinNumber || ""}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev!, tinNumber: e.target.value }))
+                setFormData((prev) => ({
+                  ...prev!,
+                  tinNumber: e.target.value,
+                }))
               }
               placeholder="TIN Number"
               className="w-full px-3 py-2 border rounded-md"
@@ -275,7 +309,10 @@ const ShopOwnerListPage: React.FC = () => {
               name="dtiSec"
               value={formData?.dtiSec || ""}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev!, dtiSec: e.target.value }))
+                setFormData((prev) => ({
+                  ...prev!,
+                  dtiSec: e.target.value,
+                }))
               }
               placeholder="DTI/SEC"
               className="w-full px-3 py-2 border rounded-md"

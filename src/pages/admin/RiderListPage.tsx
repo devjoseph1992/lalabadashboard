@@ -1,5 +1,11 @@
+// src/pages/admin/RiderListPage.tsx
+
 import React, { useEffect, useState } from "react";
 import { getRiders, updateRider, deleteRider } from "@/api/apiService"; // Ensure this path is correct
+import { useAuth } from "@/contexts/AuthContext"; // Adjust the import path as necessary
+
+// Import the UserRole type if needed
+// import { UserRole } from "@/types/UserRole";
 
 interface Rider {
   id: string;
@@ -20,6 +26,8 @@ const RiderListPage: React.FC = () => {
   const [formData, setFormData] = useState<Rider | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
+
+  const { userRole, roleLoading } = useAuth(); // Access userRole and roleLoading from context
 
   const fetchRiders = async (page: number = 1, limit: number = 5) => {
     setLoading(true);
@@ -91,6 +99,11 @@ const RiderListPage: React.FC = () => {
     }
   };
 
+  // Handle role loading state
+  if (roleLoading) {
+    return <p>Loading user information...</p>;
+  }
+
   return (
     <div className="p-6 bg-white shadow-md rounded-lg">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Rider List</h2>
@@ -110,7 +123,12 @@ const RiderListPage: React.FC = () => {
                   <th className="border border-gray-300 px-4 py-2">Address</th>
                   <th className="border border-gray-300 px-4 py-2">Plate</th>
                   <th className="border border-gray-300 px-4 py-2">Vehicle</th>
-                  <th className="border border-gray-300 px-4 py-2">Actions</th>
+                  {/* Conditionally render the Actions column header */}
+                  {userRole !== "employee" && (
+                    <th className="border border-gray-300 px-4 py-2">
+                      Actions
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -134,20 +152,23 @@ const RiderListPage: React.FC = () => {
                     <td className="border border-gray-300 px-4 py-2">
                       {rider.vehicleUnit}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      <button
-                        className="mr-2 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
-                        onClick={() => handleEdit(rider)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="bg-red-600 text-white px-4 py-1 rounded hover:bg-red-700"
-                        onClick={() => handleDelete(rider.id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
+                    {/* Conditionally render the Actions buttons */}
+                    {userRole !== "employee" && (
+                      <td className="border border-gray-300 px-4 py-2">
+                        <button
+                          className="mr-2 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+                          onClick={() => handleEdit(rider)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="bg-red-600 text-white px-4 py-1 rounded hover:bg-red-700"
+                          onClick={() => handleDelete(rider.id)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -160,7 +181,7 @@ const RiderListPage: React.FC = () => {
               onClick={() => handlePageChange(1)}
               className={`px-3 py-1 mx-1 rounded ${
                 currentPage === 1
-                  ? "bg-gray-400"
+                  ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gray-300 hover:bg-gray-400"
               }`}
               disabled={currentPage === 1}
@@ -171,7 +192,7 @@ const RiderListPage: React.FC = () => {
               onClick={() => handlePageChange(currentPage - 1)}
               className={`px-3 py-1 mx-1 rounded ${
                 currentPage === 1
-                  ? "bg-gray-400"
+                  ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gray-300 hover:bg-gray-400"
               }`}
               disabled={currentPage === 1}
@@ -195,7 +216,7 @@ const RiderListPage: React.FC = () => {
               onClick={() => handlePageChange(currentPage + 1)}
               className={`px-3 py-1 mx-1 rounded ${
                 currentPage === totalPages
-                  ? "bg-gray-400"
+                  ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gray-300 hover:bg-gray-400"
               }`}
               disabled={currentPage === totalPages}
@@ -206,7 +227,7 @@ const RiderListPage: React.FC = () => {
               onClick={() => handlePageChange(totalPages)}
               className={`px-3 py-1 mx-1 rounded ${
                 currentPage === totalPages
-                  ? "bg-gray-400"
+                  ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gray-300 hover:bg-gray-400"
               }`}
               disabled={currentPage === totalPages}

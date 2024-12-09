@@ -1,7 +1,7 @@
 import React, { useState, FormEvent } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { auth } from "@/firebase/firebaseConfig"; // Your Firebase auth configuration
+import { auth } from "@/firebase/firebaseConfig";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -10,18 +10,18 @@ const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  // Utility function for handling Firebase errors
-  const handleFirebaseError = (err: any): string => {
-    switch (err.code) {
+  // Map Firebase error codes to user-friendly messages
+  const handleFirebaseError = (errorCode: string): string => {
+    switch (errorCode) {
       case "auth/user-not-found":
         return "User not found. Please check your email.";
       case "auth/wrong-password":
-        return "Incorrect password.";
+        return "Incorrect password. Please try again.";
       case "auth/network-request-failed":
         return "Network error. Please check your connection.";
       default:
-        console.error("Unexpected error:", err);
-        return "An unexpected error occurred.";
+        console.error("Unexpected Firebase error:", errorCode);
+        return "An unexpected error occurred. Please try again later.";
     }
   };
 
@@ -31,7 +31,6 @@ const LoginPage: React.FC = () => {
     setError("");
 
     try {
-      // Authenticate user
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
@@ -40,24 +39,40 @@ const LoginPage: React.FC = () => {
       const user = userCredential.user;
 
       // Fetch and store ID token
-      const idToken = await user.getIdToken(true); // Force token refresh
+      const idToken = await user.getIdToken(true);
+
+      if (typeof idToken !== "string") {
+        throw new Error("Failed to retrieve a valid ID token.");
+      }
+
       localStorage.setItem("idToken", idToken);
 
-      console.log("ID Token stored:", idToken); // Debugging log
-
-      // Get custom claims
+      // Fetch custom claims for user role
       const idTokenResult = await user.getIdTokenResult();
-      console.log("Custom claims:", idTokenResult.claims); // Debugging log
+      const role = idTokenResult.claims.role;
 
-      // Navigate based on role
-      if (idTokenResult.claims.role === "admin") {
+      if (!role || typeof role !== "string") {
+        throw new Error(
+          "User role not found or invalid. Please contact the administrator."
+        );
+      }
+
+      console.log("Logged in user role:", role);
+
+      // Store the role for session management
+      localStorage.setItem("userRole", role);
+
+      // Redirect based on role
+      if (role === "admin") {
         navigate("/admin");
+      } else if (role === "employee") {
+        navigate("/admin"); // Redirect employees to their dashboard
       } else {
-        setError("Unauthorized role. You don't have admin access.");
+        setError("Unauthorized role. Access denied.");
       }
     } catch (err: any) {
       console.error("Login error:", err);
-      setError(handleFirebaseError(err));
+      setError(handleFirebaseError(err.code || "unknown-error"));
     } finally {
       setLoading(false);
     }
@@ -70,27 +85,37 @@ const LoginPage: React.FC = () => {
           Login
         </h2>
         <form onSubmit={handleLogin} className="space-y-4">
-          <input
-            type="email"
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            required
-            className="w-full px-3 py-2 border rounded-md"
-            disabled={loading}
-          />
-          <input
-            type="password"
-            name="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            required
-            className="w-full px-3 py-2 border rounded-md"
-            disabled={loading}
-          />
-          {error && <p className="text-red-500">{error}</p>}
+          <div>
+            <label htmlFor="email" className="sr-only">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className="w-full px-3 py-2 border rounded-md"
+              aria-label="Email"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="sr-only">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="w-full px-3 py-2 border rounded-md"
+              aria-label="Password"
+              required
+            />
+          </div>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
           <button
             type="submit"
             className={`w-full py-2 rounded-md text-white ${
