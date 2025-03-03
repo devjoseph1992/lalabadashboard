@@ -1,7 +1,7 @@
 import React, { useState, FormEvent } from "react";
-import { addRider } from "@/api/apiService"; // Adjust the path as needed
+import { addRider } from "@/api/apiService"; // Import the API call
 
-const AddRiderPage: React.FC = () => {
+const EmployeeAddRiderPage: React.FC = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -11,9 +11,6 @@ const AddRiderPage: React.FC = () => {
     address: "",
     plateNumber: "",
     vehicleUnit: "",
-    sssNumber: "",
-    tinNumber: "",
-    philhealthNumber: "",
     driverLicenseNumber: "",
     barangayClearance: "",
   });
@@ -37,10 +34,6 @@ const AddRiderPage: React.FC = () => {
       newErrors.plateNumber = "Plate number is required.";
     if (!formData.vehicleUnit)
       newErrors.vehicleUnit = "Vehicle unit is required.";
-    if (!formData.sssNumber) newErrors.sssNumber = "SSS number is required.";
-    if (!formData.tinNumber) newErrors.tinNumber = "TIN number is required.";
-    if (!formData.philhealthNumber)
-      newErrors.philhealthNumber = "PhilHealth number is required.";
     if (!formData.driverLicenseNumber && !formData.barangayClearance)
       newErrors.driverLicenseNumber =
         "Either Driver's License or Barangay Clearance is required.";
@@ -59,12 +52,7 @@ const AddRiderPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const storedRole = localStorage.getItem("userRole");
-      const userRole: "admin" | "employee" =
-        storedRole === "admin" ? "admin" : "employee"; // ✅ Ensures strict type
-
-      await addRider(formData, userRole); // ✅ Passes a valid type
-
+      await addRider(formData);
       setSuccess(true);
       setFormData({
         email: "",
@@ -75,14 +63,11 @@ const AddRiderPage: React.FC = () => {
         address: "",
         plateNumber: "",
         vehicleUnit: "",
-        sssNumber: "",
-        tinNumber: "",
-        philhealthNumber: "",
         driverLicenseNumber: "",
         barangayClearance: "",
       });
     } catch (error: any) {
-      console.error("❌ Error adding rider:", error.response?.data || error);
+      console.error("Error adding rider:", error.response?.data || error);
       setErrors({
         general: error.response?.data?.message || "An error occurred.",
       });
@@ -178,45 +163,6 @@ const AddRiderPage: React.FC = () => {
         <div>
           <input
             type="text"
-            name="sssNumber"
-            value={formData.sssNumber}
-            onChange={handleChange}
-            placeholder="SSS Number"
-            className="w-full px-3 py-2 border rounded-md"
-          />
-          {errors.sssNumber && (
-            <p className="text-red-500">{errors.sssNumber}</p>
-          )}
-        </div>
-        <div>
-          <input
-            type="text"
-            name="tinNumber"
-            value={formData.tinNumber}
-            onChange={handleChange}
-            placeholder="TIN Number"
-            className="w-full px-3 py-2 border rounded-md"
-          />
-          {errors.tinNumber && (
-            <p className="text-red-500">{errors.tinNumber}</p>
-          )}
-        </div>
-        <div>
-          <input
-            type="text"
-            name="philhealthNumber"
-            value={formData.philhealthNumber}
-            onChange={handleChange}
-            placeholder="PhilHealth Number"
-            className="w-full px-3 py-2 border rounded-md"
-          />
-          {errors.philhealthNumber && (
-            <p className="text-red-500">{errors.philhealthNumber}</p>
-          )}
-        </div>
-        <div>
-          <input
-            type="text"
             name="plateNumber"
             value={formData.plateNumber}
             onChange={handleChange}
@@ -283,4 +229,4 @@ const AddRiderPage: React.FC = () => {
   );
 };
 
-export default AddRiderPage;
+export default EmployeeAddRiderPage;

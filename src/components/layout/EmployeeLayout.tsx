@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import AdminSidebar from "./AdminSidebar";
+import EmployeeSidebar from "./EmployeeSidebar";
 import { getAuth, signOut } from "firebase/auth";
-import { db } from "@/firebase/firebaseConfig"; // Firestore import
+import { db } from "@/firebase/firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 
 // Loading Component
@@ -30,7 +30,7 @@ const ErrorScreen: React.FC<{ message: string; onRetry?: () => void }> = ({
   </div>
 );
 
-const AdminLayout: React.FC = () => {
+const EmployeeLayout: React.FC = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
@@ -41,7 +41,6 @@ const AdminLayout: React.FC = () => {
         const auth = getAuth();
         const user = auth.currentUser;
 
-        // If no user is authenticated, redirect to login
         if (!user) {
           console.warn("No authenticated user found. Redirecting to login...");
           navigate("/");
@@ -59,28 +58,27 @@ const AdminLayout: React.FC = () => {
         }
 
         const userData = userDocSnap.data();
-        const role = userData.role || "user"; // Default role
+        const role = userData.role || "user";
 
-        // Redirect employees to their dashboard
-        if (role === "employee") {
-          navigate("/employee");
+        // Redirect admins to their dashboard
+        if (role === "admin") {
+          navigate("/admin");
           return;
         }
 
-        if (role !== "admin") {
+        if (role !== "employee") {
           console.warn("Unauthorized role. Redirecting...");
           navigate("/");
           return;
         }
 
-        // Set user role and cache it in localStorage
         setUserRole(role);
         localStorage.setItem("userRole", role);
       } catch (error) {
         console.error("Error fetching user role:", error);
         navigate("/");
       } finally {
-        setLoading(false); // Stop loading
+        setLoading(false);
       }
     };
 
@@ -91,19 +89,17 @@ const AdminLayout: React.FC = () => {
     try {
       const auth = getAuth();
       await signOut(auth);
-      localStorage.clear(); // Clear session-related data
-      navigate("/"); // Redirect to login after logout
+      localStorage.clear();
+      navigate("/");
     } catch (error) {
       console.error("Error during logout:", error);
     }
   };
 
-  // Render loading state
   if (loading) {
     return <LoadingScreen />;
   }
 
-  // Render error state if userRole is invalid
   if (!userRole) {
     return (
       <ErrorScreen
@@ -115,10 +111,8 @@ const AdminLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
-      <AdminSidebar userRole={userRole} onLogout={handleLogout} />
+      <EmployeeSidebar userRole={userRole} onLogout={handleLogout} />
 
-      {/* Main Content */}
       <main className="flex-1 p-6 bg-gray-100">
         <Outlet />
       </main>
@@ -126,4 +120,4 @@ const AdminLayout: React.FC = () => {
   );
 };
 
-export default AdminLayout;
+export default EmployeeLayout;

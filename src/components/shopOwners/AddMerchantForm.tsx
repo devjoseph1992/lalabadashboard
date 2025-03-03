@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { getFirestore, collection, addDoc } from "firebase/firestore";
 import { Timestamp } from "firebase/firestore";
 
-const AddShopOwnerForm: React.FC = () => {
+const AddMerchantForm: React.FC = () => {
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
@@ -17,7 +17,7 @@ const AddShopOwnerForm: React.FC = () => {
 
     try {
       const db = getFirestore();
-      await addDoc(collection(db, "shopOwners"), {
+      await addDoc(collection(db, "merhcant"), {
         name,
         email,
         phone,
@@ -68,4 +68,4 @@ const AddShopOwnerForm: React.FC = () => {
   );
 };
 
-export default AddShopOwnerForm;
+export default AddMerchantForm;

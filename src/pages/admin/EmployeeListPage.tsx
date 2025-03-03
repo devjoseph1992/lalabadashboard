@@ -24,11 +24,18 @@ const EmployeeListPage: React.FC = () => {
     setError(null);
 
     try {
-      const response = await getEmployees(page, limit);
-      setEmployees(response.data.employees);
-      setTotalPages(response.data.totalPages || 0);
+      const data = await getEmployees(page, limit);
+      console.log("✅ Full API Response:", data);
+
+      // ✅ Ensure the expected structure matches the API response
+      if (!data || !Array.isArray(data.users)) {
+        throw new Error("Invalid API response structure");
+      }
+
+      setEmployees(data.users); // ✅ "users" instead of "employees"
+      setTotalPages(data.pagination?.totalPages || 0);
     } catch (err) {
-      console.error("Error fetching employees:", err);
+      console.error("❌ Error fetching employees:", err);
       setError("Failed to fetch employees. Please check your connection.");
     } finally {
       setLoading(false);

@@ -1,8 +1,8 @@
 // Import necessary Firebase services
 import { initializeApp } from "firebase/app";
-import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getFunctions } from "firebase/functions";
+import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 // Firebase config object
 const firebaseConfig = {
@@ -15,33 +15,20 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase app
+// ✅ Initialize Firebase app
 const app = initializeApp(firebaseConfig);
 
-// Initialize services after app initialization
+// ✅ Initialize services for live Firebase
 const db = getFirestore(app);
 const auth = getAuth(app);
 const functions = getFunctions(app);
 
-// Connect to Firebase emulators in development mode
-if (
-  import.meta.env.MODE === "development" ||
-  window.location.hostname === "localhost"
-) {
-  console.log("Connecting to Firebase emulators...");
+// ✅ Log for debugging (Ensure your `.env` is loaded)
+console.log("Firebase Initialized:", {
+  apiKey: firebaseConfig.apiKey,
+  projectId: firebaseConfig.projectId,
+  authDomain: firebaseConfig.authDomain,
+});
 
-  // Connect Firestore Emulator
-  connectFirestoreEmulator(db, "localhost", 8080);
-  console.log("Connected to Firestore Emulator at localhost:8080");
-
-  // Connect Functions Emulator
-  connectFunctionsEmulator(functions, "localhost", 5001);
-  console.log("Connected to Functions Emulator at localhost:5001");
-
-  // Connect Auth Emulator
-  connectAuthEmulator(auth, "http://localhost:9099");
-  console.log("Connected to Auth Emulator at http://localhost:9099");
-}
-
-// Export the initialized services for use elsewhere
+// ✅ Export initialized Firebase services
 export { app, db, auth, functions };

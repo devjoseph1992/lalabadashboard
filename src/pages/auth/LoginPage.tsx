@@ -1,29 +1,13 @@
 import React, { useState, FormEvent } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
-import { auth } from "@/firebase/firebaseConfig";
+import { auth, db } from "@/firebase/firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const navigate = useNavigate();
-
-  // Map Firebase error codes to user-friendly messages
-  const handleFirebaseError = (errorCode: string): string => {
-    switch (errorCode) {
-      case "auth/user-not-found":
-        return "User not found. Please check your email.";
-      case "auth/wrong-password":
-        return "Incorrect password. Please try again.";
-      case "auth/network-request-failed":
-        return "Network error. Please check your connection.";
-      default:
-        console.error("Unexpected Firebase error:", errorCode);
-        return "An unexpected error occurred. Please try again later.";
-    }
-  };
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,48 +15,43 @@ const LoginPage: React.FC = () => {
     setError("");
 
     try {
+      console.log("🔹 Attempting to log in...");
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
         password
       );
+      console.log("✅ Firebase login successful:", userCredential);
+
       const user = userCredential.user;
-
-      // Fetch and store ID token
       const idToken = await user.getIdToken(true);
-
-      if (typeof idToken !== "string") {
-        throw new Error("Failed to retrieve a valid ID token.");
-      }
-
+      console.log("📌 Retrieved ID Token:", idToken);
       localStorage.setItem("idToken", idToken);
 
-      // Fetch custom claims for user role
-      const idTokenResult = await user.getIdTokenResult();
-      const role = idTokenResult.claims.role;
+      // Fetch user role from Firestore
+      const userDocRef = doc(db, "users", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
 
-      if (!role || typeof role !== "string") {
-        throw new Error(
-          "User role not found or invalid. Please contact the administrator."
-        );
+      if (!userDocSnap.exists()) {
+        throw new Error("User role not found in Firestore.");
       }
 
-      console.log("Logged in user role:", role);
+      const userData = userDocSnap.data();
+      const role: string = userData.role || "";
 
-      // Store the role for session management
-      localStorage.setItem("userRole", role);
-
-      // Redirect based on role
-      if (role === "admin") {
-        navigate("/admin");
-      } else if (role === "employee") {
-        navigate("/admin"); // Redirect employees to their dashboard
-      } else {
+      if (!role || (role !== "admin" && role !== "employee")) {
         setError("Unauthorized role. Access denied.");
+        return;
       }
+
+      localStorage.setItem("userRole", role);
+      console.log("🔹 Logged in user role:", role);
+
+      // ✅ Force a reload to ensure AppRoutes detects the change
+      window.location.href = role === "admin" ? "/admin" : "/employee";
     } catch (err: any) {
-      console.error("Login error:", err);
-      setError(handleFirebaseError(err.code || "unknown-error"));
+      console.error("❌ Login error:", err);
+      setError("Invalid email or password. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -84,42 +63,30 @@ const LoginPage: React.FC = () => {
         <h2 className="text-2xl font-bold text-gray-800 text-center mb-4">
           Login
         </h2>
+        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
         <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="sr-only">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              className="w-full px-3 py-2 border rounded-md"
-              aria-label="Email"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="password" className="sr-only">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              className="w-full px-3 py-2 border rounded-md"
-              aria-label="Password"
-              required
-            />
-          </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-3 py-2 border rounded-md"
+            required
+          />
           <button
             type="submit"
-            className={`w-full py-2 rounded-md text-white ${
-              loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+            className={`w-full py-2 rounded-md text-white transition ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
             }`}
             disabled={loading}
           >

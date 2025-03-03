@@ -1,7 +1,10 @@
 import React, { useState, FormEvent } from "react";
-import { addShopOwner } from "@/api/apiService"; // Adjust the path to your API service
+import { addMerchant } from "@/api/apiService";
+import { useAuth } from "@/contexts/AuthContext"; // ✅ Import useAuth to get user role
 
-const AddShopOwnerPage: React.FC = () => {
+const AddMerchantPage: React.FC = () => {
+  const { userRole } = useAuth(); // ✅ Fetch user role (admin or employee)
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -39,12 +42,18 @@ const AddShopOwnerPage: React.FC = () => {
     setSuccess(false);
 
     if (!validateForm()) return;
-
     setLoading(true);
 
     try {
-      await addShopOwner(formData);
+      console.log("📌 Adding Merchant as:", userRole);
+
+      if (!userRole) {
+        throw new Error("User role is missing. Cannot add merchant.");
+      }
+
+      await addMerchant(formData, userRole); // ✅ Fix: Pass `userRole` as second argument
       setSuccess(true);
+
       setFormData({
         email: "",
         password: "",
@@ -56,7 +65,7 @@ const AddShopOwnerPage: React.FC = () => {
         dtiSec: "",
       });
     } catch (error: any) {
-      console.error("Error adding shop owner:", error.response?.data || error);
+      console.error("❌ Error adding merchant:", error.response?.data || error);
       setErrors({
         general: error.response?.data?.message || "An error occurred.",
       });
@@ -74,10 +83,10 @@ const AddShopOwnerPage: React.FC = () => {
 
   return (
     <div className="p-6 bg-white shadow-md rounded-lg max-w-md mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Add Shop Owner</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Add Merchant</h2>
       {errors.general && <p className="text-red-500 mb-4">{errors.general}</p>}
       {success && (
-        <p className="text-green-500 mb-4">Shop owner added successfully!</p>
+        <p className="text-green-500 mb-4">Merchant added successfully!</p>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
@@ -87,6 +96,7 @@ const AddShopOwnerPage: React.FC = () => {
           onChange={handleChange}
           placeholder="Email"
           className="w-full px-3 py-2 border rounded-md"
+          required
         />
         {errors.email && <p className="text-red-500">{errors.email}</p>}
 
@@ -97,6 +107,7 @@ const AddShopOwnerPage: React.FC = () => {
           onChange={handleChange}
           placeholder="Password"
           className="w-full px-3 py-2 border rounded-md"
+          required
         />
         {errors.password && <p className="text-red-500">{errors.password}</p>}
 
@@ -107,6 +118,7 @@ const AddShopOwnerPage: React.FC = () => {
           onChange={handleChange}
           placeholder="First Name"
           className="w-full px-3 py-2 border rounded-md"
+          required
         />
         {errors.firstName && <p className="text-red-500">{errors.firstName}</p>}
 
@@ -117,6 +129,7 @@ const AddShopOwnerPage: React.FC = () => {
           onChange={handleChange}
           placeholder="Last Name"
           className="w-full px-3 py-2 border rounded-md"
+          required
         />
         {errors.lastName && <p className="text-red-500">{errors.lastName}</p>}
 
@@ -127,6 +140,7 @@ const AddShopOwnerPage: React.FC = () => {
           onChange={handleChange}
           placeholder="Phone Number"
           className="w-full px-3 py-2 border rounded-md"
+          required
         />
         {errors.phoneNumber && (
           <p className="text-red-500">{errors.phoneNumber}</p>
@@ -139,6 +153,7 @@ const AddShopOwnerPage: React.FC = () => {
           onChange={handleChange}
           placeholder="Address"
           className="w-full px-3 py-2 border rounded-md"
+          required
         />
 
         <input
@@ -148,6 +163,7 @@ const AddShopOwnerPage: React.FC = () => {
           onChange={handleChange}
           placeholder="TIN Number"
           className="w-full px-3 py-2 border rounded-md"
+          required
         />
         {errors.tinNumber && <p className="text-red-500">{errors.tinNumber}</p>}
 
@@ -158,6 +174,7 @@ const AddShopOwnerPage: React.FC = () => {
           onChange={handleChange}
           placeholder="DTI/SEC"
           className="w-full px-3 py-2 border rounded-md"
+          required
         />
         {errors.dtiSec && <p className="text-red-500">{errors.dtiSec}</p>}
 
@@ -168,11 +185,11 @@ const AddShopOwnerPage: React.FC = () => {
           }`}
           disabled={loading}
         >
-          {loading ? "Adding Shop Owner..." : "Add Shop Owner"}
+          {loading ? "Adding Merchant..." : "Add Merchant"}
         </button>
       </form>
     </div>
   );
 };
 
-export default AddShopOwnerPage;
+export default AddMerchantPage;

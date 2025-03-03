@@ -1,18 +1,12 @@
 import React, { useState } from "react";
-import { getFunctions, httpsCallable } from "firebase/functions";
 import { auth } from "@/firebase/firebaseConfig";
 import InputField from "@/components/common/InputField";
-
-// Define the expected structure of the response
-type AddEmployeeResponse = {
-  message: string;
-  uid: string;
-};
 
 const AddEmployeeForm: React.FC = () => {
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>(""); // ✅ New password input field
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [tinNumber, setTinNumber] = useState<string>("");
   const [sssNumber, setSssNumber] = useState<string>("");
@@ -29,39 +23,59 @@ const AddEmployeeForm: React.FC = () => {
     setSuccess("");
 
     try {
-      const idToken = await auth.currentUser?.getIdToken();
-      if (!idToken) {
-        throw new Error("User not authenticated");
+      const user = auth.currentUser;
+      if (!user) throw new Error("User not authenticated");
+
+      const idToken = await user.getIdToken();
+      console.log("📌 Firebase Token:", idToken);
+
+      // ✅ Ensure all required fields are present
+      const newEmployee = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        password: password.trim(), // ✅ Ensure password is included
+        phoneNumber: phoneNumber.trim(),
+        tinNumber: tinNumber.trim(),
+        sssNumber: sssNumber.trim(),
+        philhealthNumber: philhealthNumber.trim(),
+        address: address.trim(),
+        role: "employee", // ✅ Ensure role is explicitly set
+      };
+
+      console.log("📌 Sending API Request:", JSON.stringify(newEmployee)); // ✅ Debugging API request payload
+
+      // ✅ Validate before sending
+      if (
+        Object.values(newEmployee).some(
+          (field) => field === "" || field === undefined
+        )
+      ) {
+        throw new Error("All fields are required.");
       }
 
-      const functions = getFunctions();
-      const addEmployee = httpsCallable<
+      const response = await fetch(
+        "https://us-central1-lalaba-dev-2fbd7.cloudfunctions.net/api/admin/add",
         {
-          firstName: string;
-          lastName: string;
-          email: string;
-          phoneNumber: string;
-          tinNumber: string;
-          sssNumber: string;
-          philhealthNumber: string;
-          address: string;
-        },
-        AddEmployeeResponse
-      >(functions, "addEmployee");
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${idToken}`, // ✅ Ensure token is included
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(newEmployee),
+        }
+      );
 
-      const result = await addEmployee({
-        firstName,
-        lastName,
-        email,
-        phoneNumber,
-        tinNumber,
-        sssNumber,
-        philhealthNumber,
-        address,
-      });
+      const data = await response.json();
 
-      setSuccess(result.data.message);
+      if (!response.ok) {
+        console.error("❌ API Response Error:", data);
+        throw new Error(data.error || "Failed to add employee.");
+      }
+
+      setSuccess("Employee added successfully!");
     } catch (error: any) {
+      console.error("❌ Error adding employee:", error);
       setError(error.message || "An unknown error occurred.");
     } finally {
       setLoading(false);
@@ -91,6 +105,13 @@ const AddEmployeeForm: React.FC = () => {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <InputField
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
         />
         <InputField

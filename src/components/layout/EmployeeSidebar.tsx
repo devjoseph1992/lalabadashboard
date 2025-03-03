@@ -3,20 +3,20 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { auth } from "@/firebase/firebaseConfig";
 
 interface SidebarProps {
-  onLogout?: () => void; // Optional function to handle logout
-  userRole: string; // User role (e.g., "admin" or "employee")
+  onLogout?: () => void;
+  userRole: string; // ✅ Ensure `userRole` is part of props
 }
 
-const AdminSidebar: React.FC<SidebarProps> = ({ userRole, onLogout }) => {
+const EmployeeSidebar: React.FC<SidebarProps> = ({ userRole, onLogout }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      await auth.signOut(); // Sign out from Firebase
-      localStorage.clear(); // Clear all stored session data
+      await auth.signOut();
+      localStorage.clear();
       console.log("User logged out successfully");
-      navigate("/"); // Redirect to login page
+      navigate("/");
     } catch (error) {
       console.error("Error during logout:", error);
     }
@@ -24,30 +24,26 @@ const AdminSidebar: React.FC<SidebarProps> = ({ userRole, onLogout }) => {
 
   const isActiveLink = (path: string) => location.pathname === path;
 
-  // Define links dynamically based on user role
+  // ✅ Define links dynamically based on user role
   const links = [
-    ...(userRole === "admin"
+    ...(userRole === "employee"
       ? [
-          { path: "/admin/addemployee", label: "Add Employee" },
-          { path: "/admin/employees", label: "Employee List" },
+          { path: "/employee/addrider", label: "Add Rider" },
+          { path: "/employee/riders", label: "Rider List" },
+          { path: "/employee/addmerchant", label: "Add Merchant" },
+          { path: "/employee/merchants", label: "Merchant List" },
         ]
-      : []), // Admin-only links
-    { path: "/admin/addrider", label: "Add Rider" },
-    { path: "/admin/riders", label: "Rider List" },
-    { path: "/admin/addmerchant", label: "Add Merchant" },
-    { path: "/admin/merchants", label: "Merchant List" },
+      : []),
   ];
 
   return (
     <aside className="h-full w-64 bg-gray-800 text-white flex flex-col">
-      {/* Header Section */}
       <div className="p-4">
         <h2 className="text-2xl font-bold">
-          {userRole === "admin" ? "Admin Dashboard" : "Employee Dashboard"}
+          {userRole === "employee" ? "Employee Dashboard" : "Unknown Dashboard"}
         </h2>
       </div>
 
-      {/* Navigation Links */}
       <nav className="flex-1">
         <ul className="space-y-2">
           {links.map((link) => (
@@ -67,7 +63,6 @@ const AdminSidebar: React.FC<SidebarProps> = ({ userRole, onLogout }) => {
         </ul>
       </nav>
 
-      {/* Logout Button */}
       <footer className="p-4">
         <button
           onClick={onLogout || handleLogout}
@@ -80,4 +75,4 @@ const AdminSidebar: React.FC<SidebarProps> = ({ userRole, onLogout }) => {
   );
 };
 
-export default AdminSidebar;
+export default EmployeeSidebar;
