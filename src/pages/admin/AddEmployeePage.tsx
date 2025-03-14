@@ -10,12 +10,19 @@ const AddEmployeePage: React.FC = () => {
     firstName: "",
     lastName: "",
     address: "",
+    barangayClearance: "",
     phoneNumber: "",
     sssNumber: "",
     tinNumber: "",
     philhealthNumber: "",
+    jobTitle: "",
+    department: "",
+    employeeId: "",
+    employmentStatus: "full-time",
     role: "employee", // ✅ Ensure role is explicitly set
   });
+
+  const employmentStatusOptions = ["full-time", "part-time", "contract"];
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
@@ -31,10 +38,15 @@ const AddEmployeePage: React.FC = () => {
     if (!formData.address) newErrors.address = "Address is required.";
     if (!/^\d{10,11}$/.test(formData.phoneNumber))
       newErrors.phoneNumber = "Phone number must be 10-11 digits.";
+    if (!formData.barangayClearance)
+      newErrors.barangayClearance = "Barangay clearance is required.";
     if (!formData.sssNumber) newErrors.sssNumber = "SSS number is required.";
     if (!formData.tinNumber) newErrors.tinNumber = "TIN number is required.";
     if (!formData.philhealthNumber)
       newErrors.philhealthNumber = "PhilHealth number is required.";
+    if (!formData.jobTitle) newErrors.jobTitle = "Job title is required.";
+    if (!formData.department) newErrors.department = "Department is required.";
+    if (!formData.employeeId) newErrors.employeeId = "Employee ID is required.";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -69,6 +81,11 @@ const AddEmployeePage: React.FC = () => {
         sssNumber: "",
         tinNumber: "",
         philhealthNumber: "",
+        barangayClearance: "", // ✅ Reset barangay clearance
+        jobTitle: "",
+        department: "",
+        employeeId: "",
+        employmentStatus: "full-time",
         role: "employee",
       });
     } catch (error: any) {
@@ -81,7 +98,9 @@ const AddEmployeePage: React.FC = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -187,6 +206,64 @@ const AddEmployeePage: React.FC = () => {
         {errors.philhealthNumber && (
           <p className="text-red-500">{errors.philhealthNumber}</p>
         )}
+        <input
+          type="text"
+          name="barangayClearance"
+          value={formData.barangayClearance}
+          onChange={handleChange}
+          placeholder="Barangay Clearance"
+          className="w-full px-3 py-2 border rounded-md"
+        />
+        {errors.barangayClearance && (
+          <p className="text-red-500">{errors.barangayClearance}</p>
+        )}
+
+        <input
+          type="text"
+          name="jobTitle"
+          value={formData.jobTitle}
+          onChange={handleChange}
+          placeholder="Job Title"
+          className="w-full px-3 py-2 border rounded-md"
+        />
+        {errors.jobTitle && <p className="text-red-500">{errors.jobTitle}</p>}
+
+        <input
+          type="text"
+          name="department"
+          value={formData.department}
+          onChange={handleChange}
+          placeholder="Department"
+          className="w-full px-3 py-2 border rounded-md"
+        />
+        {errors.department && (
+          <p className="text-red-500">{errors.department}</p>
+        )}
+
+        <input
+          type="text"
+          name="employeeId"
+          value={formData.employeeId}
+          onChange={handleChange}
+          placeholder="Employee ID"
+          className="w-full px-3 py-2 border rounded-md"
+        />
+        {errors.employeeId && (
+          <p className="text-red-500">{errors.employeeId}</p>
+        )}
+
+        <select
+          name="employmentStatus"
+          value={formData.employmentStatus}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border rounded-md"
+        >
+          {employmentStatusOptions.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
 
         <button
           type="submit"

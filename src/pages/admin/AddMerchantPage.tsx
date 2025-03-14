@@ -13,6 +13,9 @@ const AddMerchantPage: React.FC = () => {
     phoneNumber: "",
     address: "",
     tinNumber: "",
+    businessName: "", // ✅ Added Business Name
+    businessAddress: "", // ✅ Added Business Address
+    businessPermit: "", // ✅ Added Business Permit
     dtiSec: "",
   });
 
@@ -30,6 +33,12 @@ const AddMerchantPage: React.FC = () => {
     if (!/^\d{10,11}$/.test(formData.phoneNumber))
       newErrors.phoneNumber = "Phone number must be 10-11 digits.";
     if (!formData.tinNumber) newErrors.tinNumber = "TIN number is required.";
+    if (!formData.businessName)
+      newErrors.businessName = "Business name is required."; // ✅ Validation added
+    if (!formData.businessAddress)
+      newErrors.businessAddress = "Business address is required."; // ✅ Validation added
+    if (!formData.businessPermit)
+      newErrors.businessPermit = "Business permit is required."; // ✅ Validation added
     if (!formData.dtiSec) newErrors.dtiSec = "DTI/SEC is required.";
 
     setErrors(newErrors);
@@ -62,6 +71,9 @@ const AddMerchantPage: React.FC = () => {
         phoneNumber: "",
         address: "",
         tinNumber: "",
+        businessName: "", // ✅ Reset Business Name
+        businessAddress: "", // ✅ Reset Business Address
+        businessPermit: "", // ✅ Reset Business Permit
         dtiSec: "",
       });
     } catch (error: any) {
@@ -155,6 +167,45 @@ const AddMerchantPage: React.FC = () => {
           className="w-full px-3 py-2 border rounded-md"
           required
         />
+
+        <input
+          type="text"
+          name="businessName"
+          value={formData.businessName}
+          onChange={handleChange}
+          placeholder="Business Name"
+          className="w-full px-3 py-2 border rounded-md"
+          required
+        />
+        {errors.businessName && (
+          <p className="text-red-500">{errors.businessName}</p>
+        )}
+
+        <input
+          type="text"
+          name="businessAddress"
+          value={formData.businessAddress}
+          onChange={handleChange}
+          placeholder="Business Address"
+          className="w-full px-3 py-2 border rounded-md"
+          required
+        />
+        {errors.businessAddress && (
+          <p className="text-red-500">{errors.businessAddress}</p>
+        )}
+
+        <input
+          type="text"
+          name="businessPermit"
+          value={formData.businessPermit}
+          onChange={handleChange}
+          placeholder="Business Permit"
+          className="w-full px-3 py-2 border rounded-md"
+          required
+        />
+        {errors.businessPermit && (
+          <p className="text-red-500">{errors.businessPermit}</p>
+        )}
 
         <input
           type="text"
